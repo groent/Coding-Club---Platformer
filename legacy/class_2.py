@@ -1,8 +1,6 @@
 import pygame
 import sys
 
-from scripts.entities import PhysicsEntity
-from scripts.utils import *
 #Start PyGame
 #Most Window Settings are Stored Here
 class Game: 
@@ -12,27 +10,33 @@ class Game:
 
         pygame.display.set_caption("Your Game Name")
         self.screen = pygame.display.set_mode((640,480))
-        #Display is an alternate name from the actual screen surface which serves to upscale the sprites to make them more visible, pygame.Surface serves to create an image you can render to.
-        self.display = pygame.Surface((320,240))
         self.clock = pygame.time.Clock()
         self.img = pygame.image.load("data/images/clouds/cloud_1.png")
+        self.img_pos = [160, 260]
         self.movement = [False,False]
-        
-        self.assets = {
-            "player": load_image("entities/player.png")
-        }
-
-        self.player = PhysicsEntity(self, "player", (50,50), (8,15))
-
+        #Replace Pure Black with Transparent
+        self.img.set_colorkey((0,0,0))
+        #Collision Area
+        self.collision_area = pygame.Rect(50, 50, 300, 50)
     #This is where the GameLoop and Event Handling will Take place
     def run(self):
         running = True
         while running:
             #fill screen to prevent drawing
-            self.display.fill((14, 219, 248))
-            self.player.update((self.movement[1]-self.movement[0], 0))
-            self.player.render(self.display)
+            self.screen.fill((14, 219, 248))
 
+
+            #Create a rectangle which is the same size as the image (player in this case)
+            img_r = pygame.Rect(self.img_pos[0], self.img_pos[1], self.img.get_width(), self.img.get_height())
+            #Actual Collision testing
+            if img_r.colliderect(self.collision_area):
+                pygame.draw.rect(self.screen, (0,100,255), self.collision_area)
+            else:
+                pygame.draw.rect(self.screen, (0,100,15), self.collision_area)
+           
+            self.img_pos[1] += (self.movement[1] - self.movement[0])*5
+            self.screen.blit(self.img, self.img_pos)
+            
             for event in pygame.event.get():
                 # Handle the quit event
                 if event.type == pygame.QUIT:
@@ -43,17 +47,16 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    if event.key == pygame.K_LEFT:
+                    if event.key == pygame.K_UP:
                         self.movement[0] = True
-                    if event.key == pygame.K_RIGHT:
+                    if event.key == pygame.K_DOWN:
                         self.movement[1] = True
                 if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_LEFT:
+                    if event.key == pygame.K_UP:
                         self.movement[0] = False
-                    if event.key == pygame.K_RIGHT:
+                    if event.key == pygame.K_DOWN:
                         self.movement[1] = False
                         
-            self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0,0))
             #Keep this at the end
             pygame.display.update()
             self.clock.tick(60)
